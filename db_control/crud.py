@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, insert, delete, update, select
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 import json
+import pandas as pd
 from db_control.connect_MySQL import engine
 from db_control.mymodels_MySQL import Customers
 
@@ -58,25 +59,21 @@ def myselect(mymodel, customer_id):
 
 
 def myselectAll(mymodel):
+    # session構築
     Session = sessionmaker(bind=engine)
     session = Session()
     query = select(mymodel)
     try:
+        # トランザクションを開始
         with session.begin():
-            result = session.execute(query).scalars().all()
-        result_list = [
-            {
-                "customer_id": r.customer_id,
-                "customer_name": r.customer_name,
-                "age": r.age,
-                "gender": r.gender
-            }
-            for r in result
-        ]
-        result_json = json.dumps(result_list, ensure_ascii=False)
+            df = pd.read_sql_query(query, con=engine)
+            result_json = df.to_json(orient='records', force_ascii=False)
+
     except sqlalchemy.exc.IntegrityError:
         print("一意制約違反により、挿入に失敗しました")
         result_json = None
+
+    # セッションを閉じる
     session.close()
     return result_json
 
