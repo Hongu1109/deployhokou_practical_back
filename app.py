@@ -3,14 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 import json
-import platform #追加
+import platform
 from db_control import crud, mymodels_MySQL
-
-# MySQLのテーブル作成
 from db_control.create_tables_MySQL import init_db
-
-##　アプリケーション初期化時にテーブルを作成
-init_db()
 
 
 class Customer(BaseModel):
@@ -24,7 +19,8 @@ app = FastAPI()
 
 @app.on_event("startup")
 def startup_event():
-    print("platform", platform.uname()) #追加
+    print("platform", platform.uname())
+    init_db()
 
 # CORSミドルウェアの設定
 app.add_middleware(
